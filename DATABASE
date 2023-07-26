@@ -1,0 +1,112 @@
+## We will use MongoDB as our NoSQL database. 
+## We will create three collections: Users, Workouts, and Exercises. 
+## Below is an example of how you can set it up the database using Mongoose in Node.js.
+
+  ##  Install the mongoose package
+
+npm install mongoose
+
+##     Create a "db.js" file to set up the database connection
+
+// db.js
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+});
+
+const db = mongoose.connection;
+
+db.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
+
+module.exports = db;
+
+## Create a "models" directory and define the schemas for Users, Workouts, and Exercises
+
+// models/User.js
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
+
+##
+
+// models/Workout.js
+const mongoose = require('mongoose');
+
+const workoutSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+  },
+  // Add more fields as needed (e.g., exercises, date, duration, etc.)
+});
+
+const Workout = mongoose.model('Workout', workoutSchema);
+
+module.exports = Workout;
+
+## 
+
+// models/Exercise.js
+const mongoose = require('mongoose');
+
+const exerciseSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  description: {
+    type: String,
+  },
+  // Add more fields as needed (e.g., muscle group, equipment, difficulty, etc.)
+});
+
+const Exercise = mongoose.model('Exercise', exerciseSchema);
+
+module.exports = Exercise;
+
+## In the main server file (index.js), add the database connection and import the models
+
+// index.js
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const db = require('./db'); // Import the database connection
+const User = require('./models/User');
+const Workout = require('./models/Workout');
+const Exercise = require('./models/Exercise');
+
+## // ... rest of the code ...
+
+## You can now use the User, Workout, and Exercise models to interact with the database, perform CRUD operations (Create, Read, Update, Delete), and manage user-related data, workout plans, and exercise information 
