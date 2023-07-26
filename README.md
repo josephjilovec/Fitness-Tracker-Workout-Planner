@@ -2,8 +2,7 @@
 
 Purpose- A valuable tool for fitness enthusiasts to stay motivated and organized on their fitness journey.
 
-    Highlight the importance of fitness tracking and workout planning for achieving fitness goals.
-    Key features and functionalities of the web app.
+    Key features and functionalities of the web app:
 
     Create a user registration form to allow users to sign up for an account.
     Implement user authentication to ensure secure access to personal fitness data.
