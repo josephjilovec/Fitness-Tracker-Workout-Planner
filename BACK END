@@ -1,0 +1,222 @@
+### Setting up the project
+
+mkdir fitness-tracker-backend
+cd fitness-tracker-backend
+npm init -y
+
+
+## Install dependencies
+
+npm install express mongoose cors dotenv bcrypt jsonwebtoken
+
+## Main server file (index.js)
+
+// index.js
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
+
+const app = express();
+dotenv.config();
+
+const PORT = process.env.PORT || 5000;
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+})
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Error connecting to MongoDB:', error.message);
+  });
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Routes
+const userRoutes = require('./routes/users');
+const workoutRoutes = require('./routes/workouts');
+const exerciseRoutes = require('./routes/exercises');
+
+app.use('/api/users', userRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/exercises', exerciseRoutes);
+
+// 404 Route
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+
+## Create the "models" directory and add User, Workout, and Exercise models
+
+// models/User.js
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+userSchema.pre('save', async function (next) {
+  try {
+    if (!this.isModified('password')) {
+      return next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+userSchema.methods.comparePassword = async function (password) {
+  try {
+    return await bcrypt.compare(password, this.password);
+  } catch (error) {
+    throw new Error('Error comparing passwords');
+  }
+};
+
+const User = mongoose.model('User', userSchema);
+module.exports = User;
+
+###
+
+// models/Workout.js
+const mongoose = require('mongoose');
+
+const workoutSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+  },
+  // Add more fields as needed (e.g., exercises, date, duration, etc.)
+});
+
+const Workout = mongoose.model('Workout', workoutSchema);
+module.exports = Workout;
+
+###
+
+// models/Exercise.js
+const mongoose = require('mongoose');
+
+const exerciseSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  description: {
+    type: String,
+  },
+  // Add more fields as needed (e.g., muscle group, equipment, difficulty, etc.)
+});
+
+const Exercise = mongoose.model('Exercise', exerciseSchema);
+module.exports = Exercise;
+
+## Create the "routes" directory and add users, workouts, and exercises routes
+
+// routes/users.js
+const express = require('express');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+// User registration
+router.post('/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    const newUser = new User({ username, password });
+    await newUser.save();
+    const token = generateToken(newUser);
+    res.status(201).json({ token });
+  } catch (error) {
+    res.status(500).json({ error: 'Error registering user' });
+  }
+});
+
+// User login
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+    const token = generateToken(user);
+    res.status(200).json({ token });
+  } catch (error) {
+    res.status(500).json({ error: 'Error logging in' });
+  }
+});
+
+// Function to generate a JWT token
+const generateToken = (user) => {
+  return jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
+
+module.exports = router;
+
+## 
+
+// routes/workouts.js
+const express = require('express');
+const router = express.Router();
+const Workout = require('../models/Workout');
+
+// Define workout routes here (CRUD operations)
+
+module.exports = router;
+
+##
+
+// routes/exercises.js
+const express = require('express');
+const router = express.Router();
+const Exercise = require('../models/Exercise');
+
+// Define exercise routes here (CRUD operations)
+
+module.exports = router;
+
+## Create the ".env" file in the root directory and add the MongoDB connection string and JWT secret
+
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+
+### Remember to replace "your_mongodb_connection_string" with your actual MongoDB connection string and "your_jwt_secret_key" with your desired secret key for generating JWT tokens.
+
+
+
