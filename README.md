@@ -14,50 +14,6 @@ Social Features: Share posts, comment, like, and join fitness challenges.
 Deployment: Dockerized for local or cloud deployment (AWS Elastic Beanstalk).
 
 The repository is structured for modularity, with comprehensive tests (>80% coverage) using Mocha/Chai for the backend and Jest for the frontend, and a CI/CD pipeline via GitHub Actions.
-Repository Structure
-Fitness-Tracker/
-├── backend/
-│   ├── models/
-│   │   ├── User.js              # User schema
-│   │   ├── Workout.js           # Workout schema
-│   │   ├── Exercise.js          # Exercise schema
-│   ├── routes/
-│   │   ├── users.js             # User auth routes
-│   │   ├── workouts.js          # Workout CRUD and stats routes
-│   │   ├── exercises.js         # Exercise CRUD and search routes
-│   │   ├── social.js            # Social features (posts, comments, challenges)
-│   ├── middleware/
-│   │   └── auth.js              # JWT authentication middleware
-│   └── index.js                 # Main server file
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navbar.js        # Navigation bar
-│   │   │   ├── Dashboard.js     # User dashboard
-│   │   │   ├── WorkoutPlanner.js # Workout creation and scheduling
-│   │   │   ├── ExerciseLibrary.js # Exercise search and details
-│   │   │   ├── UserProfile.js   # User profile management
-│   │   │   ├── DataVisualization.js # Chart.js progress visualizations
-│   │   │   └── SocialFeed.js    # Social posts and interactions
-│   │   ├── App.js               # Main React app with routing
-│   │   ├── index.js             # React entry point
-│   │   └── styles/              # Tailwind CSS and custom styles
-│   └── public/                  # Static assets
-├── docs/
-│   ├── architecture.md          # System architecture
-│   ├── api_endpoints.md         # API endpoint documentation
-│   └── privacy_policy.md        # Data privacy policy
-├── deploy/
-│   ├── Dockerfile               # Docker setup
-│   ├── package.json             # Node.js dependencies
-│   └── aws_config.yml           # AWS deployment config
-├── .github/
-│   └── workflows/
-│       └── ci.yml               # CI/CD pipeline
-├── .env                         # Environment variables
-├── .gitignore                   # Ignore node_modules, .env
-├── README.md                    # Project overview
-└── LICENSE                      # MIT license
 
 Setup Instructions
 Prerequisites
