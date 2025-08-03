@@ -1,0 +1,135 @@
+/* Tailwind CSS Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Theme Colors for Fitness Tracker */
+:root {
+  --primary: #1a73e8; /* Blue for buttons and highlights */
+  --secondary: #34d399; /* Green for success messages */
+  --accent: #f59e0b; /* Yellow for warnings */
+  --background: #f4f6f9; /* Light gray background */
+  --card-bg: #ffffff; /* White for cards */
+  --text-primary: #333333; /* Dark text */
+  --text-secondary: #6b7280; /* Gray text for secondary elements */
+}
+
+/* Base Styles */
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Card Component */
+.card {
+  @apply bg-[var(--card-bg)] shadow-md rounded-lg p-6 mb-6;
+}
+
+/* Button Component */
+.btn-primary {
+  @apply bg-[var(--primary)] text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200;
+}
+
+.btn-secondary {
+  @apply bg-[var(--secondary)] text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-200;
+}
+
+.btn-warning {
+  @apply bg-[var(--accent)] text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition duration-200;
+}
+
+/* Input and Select Styles */
+input, select, textarea {
+  @apply border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[var(--primary)];
+}
+
+/* Responsive Typography */
+h1 {
+  @apply text-3xl font-bold text-[var(--primary)] mb-6;
+}
+
+h2 {
+  @apply text-2xl font-semibold text-[var(--primary)] mb-4;
+}
+
+h3 {
+  @apply text-xl font-semibold text-[var(--primary)] mb-4;
+}
+
+p {
+  @apply text-[var(--text-primary)];
+}
+
+.text-secondary {
+  @apply text-[var(--text-secondary)];
+}
+
+/* Responsive Layout */
+@media (max-width: 768px) {
+  h1 {
+    @apply text-2xl;
+  }
+
+  h2 {
+    @apply text-xl;
+  }
+
+  h3 {
+    @apply text-lg;
+  }
+
+  .card {
+    @apply p-4 mb-4;
+  }
+
+  .btn-primary, .btn-secondary, .btn-warning {
+    @apply px-3 py-1 text-sm;
+  }
+
+  input, select, textarea {
+    @apply p-1 text-sm;
+  }
+}
+
+/* Error and Success Messages */
+.error-message {
+  @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6;
+}
+
+.success-message {
+  @apply bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6;
+}
+
+/* Custom Calendar Styling for react-calendar */
+.react-calendar {
+  @apply border rounded-md w-full;
+}
+
+.react-calendar__tile--active {
+  @apply bg-[var(--primary)] text-white;
+}
+
+.react-calendar__tile--hover {
+  @apply bg-blue-100;
+}
+
+/* Responsive Grid for Exercise Cards and Posts */
+.exercise-grid, .post-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+}
+
+@media (max-width: 768px) {
+  .exercise-grid, .post-grid {
+    @apply grid-cols-1;
+  }
+}
+
+/* Hover Effects for Interactive Elements */
+.card-hover {
+  @apply hover:shadow-lg transition duration-200;
+}
+
+.link-hover {
+  @apply hover:text-[var(--primary)] hover:underline;
+}
