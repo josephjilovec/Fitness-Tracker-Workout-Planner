@@ -1,148 +1,242 @@
-Fitness Tracker
+# Fitness Tracker - Production-Ready Workout Planner
 
-Fitness Tracker is a full-stack web application designed to help users track workouts, manage fitness goals, and engage in social interactions. Built with a Node.js/Express backend and a React frontend, it uses MongoDB for data storage, JWT for authentication, and Chart.js for visualizing workout statistics. The application is containerized with Docker and deployable on AWS, ensuring scalability and reliability. This project aims to provide a user-friendly platform for fitness enthusiasts to plan, track, and share their fitness journeys.
+[![CI/CD](https://github.com/your-username/Fitness-Tracker-Workout-Planner/workflows/CI/badge.svg)](https://github.com/your-username/Fitness-Tracker-Workout-Planner/actions)
+[![Code Coverage](https://codecov.io/gh/your-username/Fitness-Tracker-Workout-Planner/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/Fitness-Tracker-Workout-Planner)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Project Overview
+A production-ready, full-stack fitness tracking application built with **Clean Architecture** principles. Features comprehensive workout planning, exercise library, social interactions, and data visualization.
 
-Fitness Tracker enables users to create and manage workout plans, explore an exercise library, update profiles, visualize progress, and connect via social features like posts, comments, and challenges. Key features include:
+## 🚀 Features
 
-User Management: Secure registration and login with JWT and bcrypt.
-Workout Planning: Create, edit, and schedule workouts with a calendar interface.
-Exercise Library: Searchable database of exercises with filters for muscle group and equipment.
-Data Visualization: Line charts for workout duration and calories burned over time.
-Social Features: Share posts, comment, like, and join fitness challenges.
-Deployment: Dockerized for local or cloud deployment (AWS Elastic Beanstalk).
+- **User Management**: Secure registration and authentication with JWT
+- **Workout Planning**: Create, edit, and schedule workouts with calendar integration
+- **Exercise Library**: Searchable database with filters for muscle groups and equipment
+- **Data Visualization**: Charts and statistics for workout progress
+- **Social Features**: Posts, comments, likes, and fitness challenges
+- **Production-Ready**: Comprehensive error handling, logging, security, and monitoring
 
-The repository is structured for modularity, with comprehensive tests (>80% coverage) using Mocha/Chai for the backend and Jest for the frontend, and a CI/CD pipeline via GitHub Actions.
+## 🏗️ Architecture
 
-Setup Instructions
-Prerequisites
+This project follows **Clean Architecture** principles with clear separation of concerns:
 
-Node.js: v18
-MongoDB: Local instance or MongoDB Atlas
-Docker: Latest version (optional for containerized deployment)
-Git: For cloning the repository
+```
+backend/src/
+├── entities/          # Domain models (User, Workout, Exercise, etc.)
+├── useCases/         # Business logic (RegisterUser, CreateWorkout, etc.)
+├── routes/           # HTTP handlers (RESTful API endpoints)
+├── middleware/       # Cross-cutting concerns (auth, validation, security)
+├── database/         # Database connection and configuration
+├── utils/            # Utilities (logger, errors, helpers)
+└── config/           # Configuration management
+```
 
-Installation
+### Key Principles
 
-Clone the Repository:
-git clone https://github.com/josephjilovec/Fitness-Tracker.git
-cd Fitness-Tracker
+- **SOLID Principles**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
+- **Clean Architecture**: Entities → Use Cases → Interfaces → Frameworks
+- **Security First**: Input validation, sanitization, rate limiting, secure headers
+- **Observability**: Comprehensive logging, error tracking, health checks
+- **Scalability**: Database indexing, query optimization, horizontal scaling support
 
+## 📋 Prerequisites
 
-Install Backend Dependencies:
+- Node.js v18 or higher
+- npm v9 or higher
+- MongoDB 7.0 or higher (local or Atlas)
+- Git
+
+## 🛠️ Quick Start
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/your-username/Fitness-Tracker-Workout-Planner.git
+cd Fitness-Tracker-Workout-Planner
+```
+
+### 2. Backend Setup
+
+```bash
 cd backend
 npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm run dev
+```
 
+### 3. Frontend Setup
 
-Install Frontend Dependencies:
+```bash
 cd frontend
 npm install
-
-
-Set Up MongoDB:
-
-Install MongoDB locally or use MongoDB Atlas for a cloud database.
-Create a .env file in the root directory with:MONGODB_URI=mongodb://localhost:27017/fitness-tracker
-JWT_SECRET=your_jwt_secret
-PORT=5000
-
-Replace MONGODB_URI with your MongoDB connection string and JWT_SECRET with a secure string.
-
-
-Run Locally:
-
-Start the backend:cd backend
 npm start
+```
 
+### 4. Access Application
 
-In a new terminal, start the frontend:cd frontend
-npm start
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000
+- API Health: http://localhost:5000/api/health
 
+## 📚 Documentation
 
-Access the app at http://localhost:3000.
+- [API Documentation](./docs/API.md) - Complete API reference
+- [Setup Guide](./docs/SETUP.md) - Detailed setup instructions for all platforms
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Production deployment guide
+- [Architecture](./docs/architecture.md) - System architecture and design decisions
+- [Contributing](./CONTRIBUTING.md) - Contribution guidelines
 
+## 🔒 Security Features
 
-Run with Docker:
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: bcrypt with configurable rounds
+- **Input Validation**: express-validator with custom rules
+- **Rate Limiting**: Protection against brute force and DDoS
+- **Security Headers**: Helmet.js for secure HTTP headers
+- **Input Sanitization**: XSS and MongoDB injection protection
+- **CORS**: Configurable cross-origin resource sharing
 
-Build the Docker image:docker build -t fitness-tracker -f deploy/Dockerfile .
+## 🧪 Testing
 
-
-Run the container:docker run -p 5000:5000 -e MONGODB_URI=<your_mongodb_uri> -e JWT_SECRET=<your_jwt_secret> fitness-tracker
-
-
-Access at http://localhost:5000.
-
-
-
-Deploying to the Cloud
-To deploy Fitness Tracker for public access, use AWS Elastic Beanstalk:
-
-Install AWS CLI: npm install -g aws-cli.
-Configure AWS credentials:aws configure
-
-Enter AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and set region to us-east-1.
-Build and push Docker image:docker build -t fitness-tracker -f deploy/Dockerfile .
-docker tag fitness-tracker:latest your_docker_username/fitness-tracker:latest
-docker push your_docker_username/fitness-tracker:latest
-
-
-Deploy to Elastic Beanstalk:eb init -p docker fitness-tracker --region us-east-1
-eb create fitness-tracker-env --single --instance_type t3.medium
-eb deploy fitness-tracker-env
-
-
-Set environment variables:eb setenv MONGODB_URI=<your_mongodb_uri> JWT_SECRET=<your_jwt_secret> PORT=5000
-
-
-Access the app at http://fitness-tracker-env.<random-id>.us-east-1.elasticbeanstalk.com.
-
-Live Demo
-A live demo is not currently hosted. To test Fitness Tracker, follow the setup instructions above to run locally or deploy to a cloud platform like AWS or DigitalOcean. Deployment may incur costs (~$12-$50/month).
-Usage Examples
-1. Register a User
-curl -X POST http://localhost:5000/api/users/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"johndoe","email":"john@example.com","password":"secure123"}'
-
-2. Create a Workout
-curl -X POST http://localhost:5000/api/workouts/create \
-  -H "Authorization: Bearer <jwt_token>" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Morning Run","exercises":["<exercise_id>"],"duration":30,"caloriesBurned":300}'
-
-3. Search Exercises
-curl -X GET "http://localhost:5000/api/exercises/search?muscleGroup=Chest" \
-  -H "Authorization: Bearer <jwt_token>"
-
-4. Create a Post
-curl -X POST http://localhost:5000/api/social/posts \
-  -H "Authorization: Bearer <jwt_token>" \
-  -H "Content-Type: application/json" \
-  -d '{"content":"Completed a 5K run today!"}'
-
-5. View the Dashboard
-
-Run the app locally (npm start in frontend/).
-Navigate to http://localhost:3000 to view workout history, profile, and social feed.
-
-Testing
-Run backend and frontend tests:
+```bash
+# Backend tests
 cd backend
 npm test
-cd ../frontend
+npm run test:coverage
+
+# Frontend tests
+cd frontend
 npm test
+npm run test:coverage
+```
 
-Tests use Mocha/Chai for backend and Jest for frontend, ensuring >80% coverage.
-Contributing
-Contributions are welcome under the MIT License. Please:
+## 🚢 Deployment
 
-Fork the repository and create a feature branch (feature/your-feature).
-Submit pull requests to the develop branch.
-Ensure tests pass and add new tests for new features.
-Follow ESLint code style guidelines.
+### Docker
 
-License
-Fitness Tracker is licensed under the MIT License. See LICENSE for details.
-Contact
-For questions or issues, contact Joseph Jilovec or open an issue on GitHub.
+```bash
+docker build -t fitness-tracker -f deploy/Dockerfile .
+docker run -p 5000:5000 \
+  -e MONGODB_URI=your-mongodb-uri \
+  -e JWT_SECRET=your-secret \
+  fitness-tracker
+```
+
+### AWS Elastic Beanstalk
+
+```bash
+eb init -p docker fitness-tracker
+eb create fitness-tracker-env
+eb deploy
+```
+
+See [Deployment Guide](./docs/DEPLOYMENT.md) for detailed instructions.
+
+## 📊 API Endpoints
+
+### Authentication
+- `POST /api/v1/users/register` - Register new user
+- `POST /api/v1/users/login` - Authenticate user
+
+### Workouts
+- `GET /api/v1/workouts` - Get user workouts
+- `POST /api/v1/workouts` - Create workout
+- `PUT /api/v1/workouts/:id` - Update workout
+- `DELETE /api/v1/workouts/:id` - Delete workout
+- `GET /api/v1/workouts/stats` - Get workout statistics
+
+### Exercises
+- `GET /api/v1/exercises` - Search exercises
+- `POST /api/v1/exercises` - Create exercise
+- `GET /api/v1/exercises/:id` - Get exercise by ID
+- `PUT /api/v1/exercises/:id` - Update exercise
+- `DELETE /api/v1/exercises/:id` - Delete exercise
+
+### Social
+- `GET /api/v1/social/posts` - Get posts
+- `POST /api/v1/social/posts` - Create post
+- `POST /api/v1/social/posts/:id/like` - Like/unlike post
+- `POST /api/v1/social/comments` - Create comment
+- `GET /api/v1/social/comments` - Get comments
+- `GET /api/v1/social/challenges` - Get challenges
+- `POST /api/v1/social/challenges/:id/join` - Join challenge
+
+### Health
+- `GET /api/health` - Health check
+- `GET /api/health/ready` - Readiness probe
+- `GET /api/health/live` - Liveness probe
+
+See [API Documentation](./docs/API.md) for complete details.
+
+## 🏛️ Tech Stack
+
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **JWT** - Authentication
+- **Winston** - Logging
+- **Joi/express-validator** - Validation
+
+### Frontend
+- **React** - UI library
+- **React Router** - Routing
+- **Axios** - HTTP client
+- **Chart.js** - Data visualization
+- **Tailwind CSS** - Styling
+
+### DevOps
+- **Docker** - Containerization
+- **GitHub Actions** - CI/CD
+- **ESLint** - Code linting
+- **Mocha/Chai** - Testing
+
+## 📈 Performance
+
+- Database indexes on frequently queried fields
+- Query optimization with aggregation pipelines
+- Response compression
+- Efficient pagination
+- Connection pooling
+
+## 🔍 Monitoring
+
+- Health check endpoints
+- Comprehensive logging (Winston)
+- Error tracking ready (Sentry integration)
+- Performance metrics
+- Database connection monitoring
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE.md) file for details.
+
+## 👥 Authors
+
+- **Joseph Jilovec** - Initial work
+
+## 🙏 Acknowledgments
+
+- Clean Architecture principles by Robert C. Martin
+- Express.js community
+- React community
+- MongoDB community
+
+## 📞 Support
+
+For support, email support@fitness-tracker.com or open an issue on GitHub.
+
+---
+
+**Built with ❤️ using Clean Architecture principles**
