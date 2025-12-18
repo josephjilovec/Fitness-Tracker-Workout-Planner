@@ -1,179 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+/**
+ * @fileoverview Social Feed Component
+ * @description Social features: posts, comments, likes, challenges
+ * @module components/SocialFeed
+ */
 
-function SocialFeed() {
-  const [posts, setPosts] = useState([]);
-  const [challenges, setChallenges] = useState([]);
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
+import useApi from '../hooks/useApi';
+import LoadingSpinner from './LoadingSpinner';
+
+/**
+ * SocialFeed component
+ * Optimized with useCallback
+ */
+const SocialFeed = () => {
+  const { user } = useAuth();
   const [newPost, setNewPost] = useState('');
   const [newComment, setNewComment] = useState({});
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  // Fetch social data on mount
+  // Fetch posts
+  const {
+    data: postsData,
+    loading: postsLoading,
+    execute: fetchPosts,
+  } = useApi(apiService.getPosts, { showErrorToast: true });
+
+  // Fetch challenges
+  const {
+    data: challengesData,
+    loading: challengesLoading,
+    execute: fetchChallenges,
+  } = useApi(apiService.getChallenges, { showErrorToast: true });
+
+  // Create post
+  const { loading: createPostLoading, execute: createPost } = useApi(
+    apiService.createPost,
+    { showSuccessToast: true, showErrorToast: true },
+  );
+
+  // Like post
+  const { execute: likePost } = useApi(apiService.likePost, {
+    showSuccessToast: false,
+    showErrorToast: true,
+  });
+
+  // Create comment
+  const { execute: createComment } = useApi(apiService.createComment, {
+    showSuccessToast: true,
+    showErrorToast: true,
+  });
+
+  // Join challenge
+  const { execute: joinChallenge } = useApi(apiService.joinChallenge, {
+    showSuccessToast: true,
+    showErrorToast: true,
+  });
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Please log in to view the social feed');
-          return;
-        }
-
-        // Fetch posts
-        const postsResponse = await axios.get('/api/social/posts', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setPosts(postsResponse.data.posts);
-
-        // Fetch challenges
-        const challengesResponse = await axios.get('/api/social/challenges', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setChallenges(challengesResponse.data.challenges);
-      } catch (err) {
-        console.error('Fetch social data error:', err.message);
-        setError('Failed to load social data');
-      }
-    };
-
-    fetchData();
-  }, []);
+    fetchPosts({ limit: 20 });
+    fetchChallenges({ limit: 10 });
+  }, [fetchPosts, fetchChallenges]);
 
   // Handle post creation
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  const handleCreatePost = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!newPost.trim()) return;
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to create a post');
-        return;
+      const result = await createPost({ content: newPost });
+      if (result.success) {
+        setNewPost('');
+        fetchPosts({ limit: 20 });
       }
-
-      if (!newPost.trim()) {
-        setError('Post content is required');
-        return;
-      }
-
-      const response = await axios.post(
-        '/api/social/posts',
-        { content: newPost },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setPosts([response.data.post, ...posts]);
-      setNewPost('');
-      setSuccess('Post created successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      console.error('Create post error:', err.message);
-      setError('Failed to create post');
-    }
-  };
-
-  // Handle comment creation
-  const handleAddComment = async (postId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to comment');
-        return;
-      }
-
-      if (!newComment[postId]?.trim()) {
-        setError('Comment content is required');
-        return;
-      }
-
-      const response = await axios.post(
-        '/api/social/comments',
-        { postId, content: newComment[postId] },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // Update posts with new comment
-      setPosts(posts.map((post) =>
-        post._id === postId
-          ? { ...post, comments: [...(post.comments || []), response.data.comment] }
-          : post
-      ));
-      setNewComment({ ...newComment, [postId]: '' });
-      setSuccess('Comment added successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      console.error('Add comment error:', err.message);
-      setError('Failed to add comment');
-    }
-  };
+    },
+    [newPost, createPost, fetchPosts],
+  );
 
   // Handle like toggle
-  const handleToggleLike = async (postId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to like posts');
-        return;
+  const handleToggleLike = useCallback(
+    async (postId) => {
+      const result = await likePost(postId);
+      if (result.success) {
+        fetchPosts({ limit: 20 });
       }
+    },
+    [likePost, fetchPosts],
+  );
 
-      const response = await axios.post(
-        '/api/social/likes',
-        { postId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  // Handle comment creation
+  const handleAddComment = useCallback(
+    async (postId) => {
+      const commentText = newComment[postId];
+      if (!commentText?.trim()) return;
 
-      setPosts(posts.map((post) =>
-        post._id === postId ? { ...post, likes: response.data.likes } : post
-      ));
-      setSuccess(response.data.message);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      console.error('Toggle like error:', err.message);
-      setError('Failed to toggle like');
-    }
-  };
+      const result = await createComment({ postId, content: commentText });
+      if (result.success) {
+        setNewComment((prev) => ({ ...prev, [postId]: '' }));
+        fetchPosts({ limit: 20 });
+      }
+    },
+    [newComment, createComment, fetchPosts],
+  );
 
   // Handle join challenge
-  const handleJoinChallenge = async (challengeId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to join challenges');
-        return;
+  const handleJoinChallenge = useCallback(
+    async (challengeId) => {
+      const result = await joinChallenge(challengeId);
+      if (result.success) {
+        fetchChallenges({ limit: 10 });
       }
+    },
+    [joinChallenge, fetchChallenges],
+  );
 
-      const response = await axios.post(
-        '/api/social/challenges',
-        { challengeId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setChallenges(challenges.map((challenge) =>
-        challenge._id === challengeId ? response.data.challenge : challenge
-      ));
-      setSuccess('Joined challenge successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      console.error('Join challenge error:', err.message);
-      setError('Failed to join challenge');
-    }
-  };
+  const posts = postsData?.posts || [];
+  const challenges = challengesData?.challenges || [];
 
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold text-blue-600 mb-6">Social Feed</h2>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-          {success}
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Posts Section */}
@@ -190,42 +136,62 @@ function SocialFeed() {
               />
               <button
                 type="submit"
-                className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                disabled={createPostLoading || !newPost.trim()}
+                className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
               >
-                Post
+                {createPostLoading ? 'Posting...' : 'Post'}
               </button>
             </form>
           </div>
 
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Posts</h3>
-            {posts.length === 0 ? (
+            {postsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : posts.length === 0 ? (
               <p className="text-gray-500">No posts available</p>
             ) : (
               posts.map((post) => (
-                <div key={post._id} className="border-b py-4">
-                  <p className="text-gray-700"><strong>{post.userId.username}:</strong> {post.content}</p>
-                  <p className="text-gray-500 text-sm">
-                    Posted: {new Date(post.createdAt).toLocaleDateString()}
-                  </p>
+                <div key={post._id || post.id} className="border-b py-4 last:border-b-0">
+                  <div className="flex items-start mb-2">
+                    <div className="flex-1">
+                      <p className="font-semibold">
+                        {post.userId?.username || 'Unknown User'}
+                      </p>
+                      <p className="text-gray-700">{post.content}</p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex space-x-4 mt-2">
                     <button
-                      onClick={() => handleToggleLike(post._id)}
+                      onClick={() => handleToggleLike(post._id || post.id)}
                       className="text-blue-600 hover:text-blue-800"
                     >
-                      {post.likes.includes(localStorage.getItem('userId')) ? 'Unlike' : 'Like'} ({post.likes.length})
+                      Like ({post.likes?.length || 0})
                     </button>
                   </div>
                   <div className="mt-2">
                     <input
                       type="text"
-                      value={newComment[post._id] || ''}
-                      onChange={(e) => setNewComment({ ...newComment, [post._id]: e.target.value })}
+                      value={newComment[post._id || post.id] || ''}
+                      onChange={(e) =>
+                        setNewComment({ ...newComment, [post._id || post.id]: e.target.value })
+                      }
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddComment(post._id || post.id);
+                        }
+                      }}
                       className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                       placeholder="Add a comment..."
                     />
                     <button
-                      onClick={() => handleAddComment(post._id)}
+                      onClick={() => handleAddComment(post._id || post.id)}
                       className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
                     >
                       Comment
@@ -237,35 +203,36 @@ function SocialFeed() {
           </div>
         </div>
 
-        {/* Challenges and Leaderboard Section */}
+        {/* Challenges Section */}
         <div className="bg-white shadow-md rounded-lg p-6">
           <h3 className="text-xl font-semibold mb-4">Challenges</h3>
-          {challenges.length === 0 ? (
+          {challengesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : challenges.length === 0 ? (
             <p className="text-gray-500">No challenges available</p>
           ) : (
             challenges.map((challenge) => (
-              <div key={challenge._id} className="border-b py-4">
+              <div key={challenge._id || challenge.id} className="border-b py-4 last:border-b-0">
                 <h4 className="text-lg font-medium">{challenge.title}</h4>
-                <p className="text-gray-600">{challenge.description || 'No description'}</p>
-                <p className="text-gray-500 text-sm">
-                  Participants: {challenge.participants.length}
+                <p className="text-gray-600 text-sm">{challenge.description || 'No description'}</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Participants: {challenge.participants?.length || 0}
                 </p>
                 <button
-                  onClick={() => handleJoinChallenge(challenge._id)}
-                  className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                  onClick={() => handleJoinChallenge(challenge._id || challenge.id)}
+                  className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
                 >
                   Join Challenge
                 </button>
               </div>
             ))
           )}
-
-          <h3 className="text-xl font-semibold mt-6 mb-4">Leaderboard</h3>
-          <p className="text-gray-500">Coming soon: Top users by workout frequency and challenge participation!</p>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default SocialFeed;

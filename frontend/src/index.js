@@ -1,9 +1,15 @@
+/**
+ * @fileoverview Application Entry Point
+ * @description Main entry point for React application
+ * @module index
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './styles/tailwind.css'; // Import local Tailwind CSS (generated from CDN or CLI)
+import './styles/tailwind.css';
 
-// Create root and render App with React Router
+// Create root and render App
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

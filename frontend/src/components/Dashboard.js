@@ -1,88 +1,121 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+/**
+ * @fileoverview Dashboard Component
+ * @description Main dashboard with workout history and profile summary
+ * @module components/Dashboard
+ */
 
-function Dashboard() {
-  const [workouts, setWorkouts] = useState([]);
-  const [profile, setProfile] = useState({ name: '', age: null, fitnessGoals: [] });
-  const [error, setError] = useState('');
+import React, { useEffect, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
+import useApi from '../hooks/useApi';
+import LoadingSpinner from './LoadingSpinner';
+
+/**
+ * Dashboard component
+ * Optimized with useMemo and custom hooks
+ */
+const Dashboard = () => {
+  const { user } = useAuth();
+  const {
+    data: workoutsData,
+    loading: workoutsLoading,
+    error: workoutsError,
+    execute: fetchWorkouts,
+  } = useApi(apiService.getWorkouts, { showErrorToast: true });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Please log in to view your dashboard');
-          return;
-        }
+    fetchWorkouts({ limit: 10 });
+  }, [fetchWorkouts]);
 
-        // Fetch user profile
-        const profileResponse = await axios.get('/api/users/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setProfile(profileResponse.data.user);
+  // Memoize workouts to prevent unnecessary re-renders
+  const workouts = useMemo(() => {
+    return workoutsData?.workouts || [];
+  }, [workoutsData]);
 
-        // Fetch workout history
-        const workoutsResponse = await axios.get('/api/workouts/get', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setWorkouts(workoutsResponse.data.workouts);
-      } catch (err) {
-        console.error('Dashboard fetch error:', err.message);
-        setError('Failed to load dashboard data');
-      }
-    };
+  // Memoize recent activities
+  const recentActivities = useMemo(() => {
+    return workouts.slice(0, 5);
+  }, [workouts]);
 
-    fetchData();
-  }, []);
+  if (workoutsLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold text-blue-600 mb-6">Welcome to Your Dashboard</h2>
+      <h2 className="text-3xl font-bold text-blue-600 mb-6">
+        Welcome back, {user?.username || 'User'}!
+      </h2>
 
-      {error && (
+      {workoutsError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
+          {workoutsError}
         </div>
       )}
 
-      {/* Profile Section */}
+      {/* Profile Summary */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">Profile</h3>
-        <p><strong>Name:</strong> {profile.name || 'Not set'}</p>
-        <p><strong>Age:</strong> {profile.age || 'Not set'}</p>
-        <p><strong>Fitness Goals:</strong> {profile.fitnessGoals.length > 0 ? profile.fitnessGoals.join(', ') : 'None'}</p>
+        <h3 className="text-xl font-semibold mb-4">Profile Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-gray-600">Name</p>
+            <p className="font-semibold">{user?.profile?.name || 'Not set'}</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Age</p>
+            <p className="font-semibold">{user?.profile?.age || 'Not set'}</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Fitness Goals</p>
+            <p className="font-semibold">
+              {user?.profile?.fitnessGoals?.length || 0} goal(s)
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Workout History Section */}
+      {/* Workout History */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">Workout History</h3>
+        <h3 className="text-xl font-semibold mb-4">Recent Workouts</h3>
         {workouts.length === 0 ? (
           <p className="text-gray-500">No workouts recorded yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {workouts.map(workout => (
-              <div key={workout._id} className="border rounded-lg p-4 hover:shadow-lg transition">
+            {workouts.map((workout) => (
+              <div
+                key={workout._id || workout.id}
+                className="border rounded-lg p-4 hover:shadow-lg transition"
+              >
                 <h4 className="text-lg font-medium">{workout.title}</h4>
-                <p className="text-gray-600">Date: {new Date(workout.date).toLocaleDateString()}</p>
+                <p className="text-gray-600">
+                  Date: {new Date(workout.date).toLocaleDateString()}
+                </p>
                 <p className="text-gray-600">Duration: {workout.duration} min</p>
                 <p className="text-gray-600">Calories: {workout.caloriesBurned}</p>
-                <p className="text-gray-600">Exercises: {workout.exercises.length}</p>
+                <p className="text-gray-600">
+                  Exercises: {workout.exercises?.length || 0}
+                </p>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Recent Activities Section */}
+      {/* Recent Activities */}
       <div className="bg-white shadow-md rounded-lg p-6">
         <h3 className="text-xl font-semibold mb-4">Recent Activities</h3>
-        {workouts.length === 0 ? (
+        {recentActivities.length === 0 ? (
           <p className="text-gray-500">No recent activities.</p>
         ) : (
           <ul className="list-disc pl-5">
-            {workouts.slice(0, 5).map(workout => (
-              <li key={workout._id} className="text-gray-700">
-                Completed "{workout.title}" on {new Date(workout.date).toLocaleDateString()}
+            {recentActivities.map((workout) => (
+              <li key={workout._id || workout.id} className="text-gray-700">
+                Completed "{workout.title}" on{' '}
+                {new Date(workout.date).toLocaleDateString()}
               </li>
             ))}
           </ul>
@@ -90,6 +123,6 @@ function Dashboard() {
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard;
